@@ -1,4 +1,9 @@
+"use client";
+
 import Image from "next/image";
+import { CSSProperties, useEffect, useState } from "react";
+import { IoHeartOutline, IoHeartSharp, IoLogoGithub } from "react-icons/io5";
+import { MorphingTextDemo } from "@/components/animate-ui/primitives/texts/morphing";
 
 const projects = [
   {
@@ -37,29 +42,123 @@ const techIcons = [
   { src: "/icons/icons8-db-100.png", label: "MongoDB" },
 ];
 
+const storageKey = "portfolio-like-count";
+const delayStyle = (value: string): CSSProperties => ({ "--delay": value } as CSSProperties);
+
 export default function Home() {
+  const [showIntro, setShowIntro] = useState(true);
+  const [allowReveal, setAllowReveal] = useState(false);
+  const [likeCount, setLikeCount] = useState(21);
+  const [likeAnimating, setLikeAnimating] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowIntro(false), 2600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (showIntro) {
+      return;
+    }
+
+    const timer = setTimeout(() => setAllowReveal(true), 100);
+    return () => clearTimeout(timer);
+  }, [showIntro]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const stored = localStorage.getItem(storageKey);
+      if (!stored || stored === "142") {
+        localStorage.setItem(storageKey, "21");
+        setLikeCount(21);
+      } else {
+        setLikeCount(Number(stored));
+      }
+      const likedFlag = localStorage.getItem(`${storageKey}-liked`);
+      if (likedFlag === "true") {
+        setHasLiked(true);
+      } else {
+        localStorage.setItem(`${storageKey}-liked`, "false");
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const handleLike = () => {
+    if (hasLiked) {
+      return;
+    }
+
+    setLikeAnimating(true);
+    setLikeCount((prev) => {
+      const next = prev + 1;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(storageKey, next.toString());
+      }
+      return next;
+    });
+    setHasLiked(true);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`${storageKey}-liked`, "true");
+    }
+    setTimeout(() => setLikeAnimating(false), 300);
+  };
+
   return (
     <main className="min-h-screen bg-white text-black">
+      {showIntro && (
+        <div className="loading-overlay">
+          <MorphingTextDemo loop holdDelay={1500} className="loading-text text-[clamp(96px,12vw,220px)] font-black" />
+        </div>
+      )}
       <div className="mx-auto flex max-w-6xl flex-col gap-16 px-8 py-12 sm:px-12 lg:px-28">
-        <section className="pb-4">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="relative flex h-24 w-24 justify-center">
-                <div className="relative flex h-24 w-24 items-center justify-center rounded-xl overflow-hidden bg-black/5">
-                  <Image
-                    src="https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=400&q=80"
-                    alt="Dhanuka portrait"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 160px, 256px"
-                  />
+        <section
+          className="pb-4 reveal-on-load"
+          style={delayStyle("0.05s")}
+          data-visible={allowReveal}
+        >
+          <div className="flex flex-col gap-6 mt-8">
+            <div className="flex flex-wrap items-center justify-between gap-6">
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="relative flex h-24 w-24 justify-center">
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-xl overflow-hidden bg-black/5">
+                    <Image
+                      src="/dhanuka.jpg"
+                      alt="Dhanuka portrait"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 160px, 256px"
+                    />
+                  </div>
+                  <span className="absolute -right-1 -bottom-1 h-4 w-4 rounded-full bg-green-400 border border-black/60" />
                 </div>
-                <span className="absolute -right-1 -bottom-1 h-4 w-4 rounded-full bg-green-400  border-black/60" />
+                <div className="flex flex-col gap-1">
+                  <h1 className="text-4xl font-semibold tracking-tight text-black">Dhanuka R</h1>
+                  <p className="text-lg font-medium text-black/70">Full Stack Developer</p>
+                  <p className="text-sm text-black/50">Colombo, Sri Lanka</p>
+                </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <h1 className="text-4xl font-semibold tracking-tight text-black">Dhanuka R</h1>
-                <p className="text-lg font-medium text-black/70">Full Stack Developer</p>
-                <p className="text-sm text-black/50">Colombo, Sri Lanka</p>
+              <div className="flex items-center gap-3 lg:px-8">
+                <button
+                  type="button"
+                  className={`like-pill rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    hasLiked ? "liked" : ""
+                  } ${likeAnimating ? "animate" : ""}`}
+                  onClick={handleLike}
+                >
+                  {hasLiked ? (
+                    <IoHeartSharp className="like-icon liked-icon" />
+                  ) : (
+                    <IoHeartOutline className="like-icon" />
+                  )}
+                  <span className="ml-1">{likeCount}</span>
+                </button>
+                <span className="text-xs font-medium text-black/60">people like my portfolio</span>
               </div>
             </div>
             <p className="text-base text-black/70 text-left">
@@ -90,7 +189,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mt-4">
+        <section
+          className="mt-4 reveal-on-load"
+          style={delayStyle("0.15s")}
+          data-visible={allowReveal}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold">Current tech stack</h2>
           </div>
@@ -106,7 +209,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section>
+        <section
+          className="reveal-on-load"
+          style={delayStyle("0.25s")}
+          data-visible={allowReveal}
+        >
           <div className="flex mt-8 items-center justify-between">
             <div>
               <p className="text-sm mb-4 text-black/50">Recent projects</p>
@@ -117,7 +224,7 @@ export default function Home() {
             {projects.map((project) => (
               <div
                 key={project.title}
-                className="flip-card rounded-xl group aspect-square project-card bg-black/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.06)]"
+                className="flip-card relative rounded-xl group aspect-square project-card bg-black/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.06)]"
               >
                 <div className="flip-card-inner  relative h-full w-full">
                   <div className="flip-card-face flip-card-front">
@@ -129,9 +236,25 @@ export default function Home() {
                         <h3 className="text-2xl font-semibold text-black">{project.title}</h3>
                         <p className="text-sm text-black/60">{project.summary}</p>
                       </div>
-                      <p className="text-[0.65rem] font-semibold text-black/40">
-                        {project.tech.join(" • ")}
-                      </p>
+                        <p className="text-[0.65rem] font-semibold text-black/40">
+                          {project.tech.join(" • ")}
+                        </p>
+                        <div className="front-mobile-actions md:hidden">
+                          <a
+                            href="#demo"
+                            className="icon-pill flex h-9 w-9 items-center justify-center rounded-full border border-black/20 text-md"
+                          >
+                            ↗
+                          </a>
+                          <a
+                            href="https://github.com/Dhanuka001"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="icon-pill flex h-9 w-9 items-center justify-center rounded-full border border-black/20"
+                          >
+                            <IoLogoGithub className="text-lg" />
+                          </a>
+                        </div>
                     </div>
                   </div>
                   <div className="flip-card-face flip-card-back">
@@ -143,7 +266,7 @@ export default function Home() {
                           Designed UI kits, orchestrated integrations, and shipped polished demos for product stakeholders.
                         </p>
                       </div>
-                      <div className="flex flex-col gap-3 text-sm">
+                      <div className="flex flex-col gap-2 text-sm">
                         <div className="flex items-center justify-between text-white/70">
                           <span>Role</span>
                           <span>{project.role}</span>
@@ -152,12 +275,22 @@ export default function Home() {
                           <span>Duration</span>
                           <span>6 weeks</span>
                         </div>
-                        <a
-                          href="#demo"
-                          className="mt-2 inline-flex w-full items-center justify-center border border-white/60 px-4 py-2 text-sm font-semibold transition hover:border-white hover:bg-white hover:text-black"
-                        >
-                          View demo
-                        </a>
+                        <div className="flex justify-between gap-3">
+                          <a
+                            href="#demo"
+                            className="mt-2 inline-flex w-full items-center justify-center border border-white/60 px-4 py-2 text-sm font-semibold transition hover:border-white hover:bg-white hover:text-black"
+                          >
+                            View demo
+                          </a>
+                          <a
+                            href="https://github.com/Dhanuka001"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex h-10 w-14 items-center justify-center rounded-full border border-white/60 transition hover:border-white hover:bg-white hover:text-black"
+                          >
+                            <IoLogoGithub />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -174,22 +307,44 @@ export default function Home() {
           </div>
         </section>
 
-        <section>
+        <section
+          className="reveal-on-load"
+          style={delayStyle("0.35s")}
+          data-visible={allowReveal}
+        >
           <div className="grid gap-8 border border-black/10 p-8">
-            <h2 className="text-2xl font-semibold">How I structure partnerships</h2>
+            <h2 className="text-2xl font-semibold">How I partner as a full stack engineer</h2>
             <div className="grid gap-6 md:grid-cols-3">
-              {["Discovery", "Delivery", "Iteration"].map((phase) => (
-                <article key={phase} className="space-y-2">
-                  <p className="text-xs text-black/80">{phase}</p>
-                  <p className="text-sm text-black/60">
-                    Scoped milestones, shared worklogs, and regular demos keep clients in the loop from day one.
-                  </p>
-                </article>
-              ))}
+              <article className="space-y-2">
+                <p className="text-md text-black">Architecture Sprint</p>
+                <p className="text-sm text-black/60">
+                  Align on API contracts, data models, and UX flows with product + backend before any code gets written so the
+                  team moves fast without rework.
+                </p>
+              </article>
+              <article className="space-y-2">
+                <p className="text-md text-black">Build & Monitor</p>
+                <p className="text-sm text-black/60">
+                  I ship end-to-end slices that include UI, services, and observability—every rollout ships with pairing notes and
+                  telemetry hooks.
+                </p>
+              </article>
+              <article className="space-y-2">
+                <p className="text-md text-black">Operate & Iterate</p>
+                <p className="text-sm text-black/60">
+                  After launch, we measure adoption, unblock releases, and prioritize the next iteration while keeping docs and
+                  stakeholders in sync.
+                </p>
+              </article>
             </div>
           </div>
         </section>
-        <footer className="mt-12 border-t border-black/10 pt-8 text-center text-sm text-black/60">
+
+        <footer
+          className="mt-12 border-t border-black/10 pt-8 text-center text-sm text-black/60 reveal-on-load"
+          style={delayStyle("0.45s")}
+          data-visible={allowReveal}
+        >
           © {new Date().getFullYear()} Dhanuka R — handcrafted web experiences, built with clarity and discipline.
         </footer>
       </div>
