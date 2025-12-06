@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { CSSProperties, useEffect, useState } from "react";
-import { IoHeartOutline, IoHeartSharp, IoLogoGithub } from "react-icons/io5";
+import { IoArrowForward, IoHeartOutline, IoHeartSharp, IoLogoGithub } from "react-icons/io5";
 import { MorphingTextDemo } from "@/components/animate-ui/primitives/texts/morphing";
 import { fetchLikeCount, incrementLike } from "@/lib/firebaseClient";
 
@@ -172,7 +172,7 @@ export default function Home() {
                 <span className="text-xs font-medium text-black/60">people like my portfolio</span>
               </div>
             </div>
-            <p className="text-base text-black/70 text-left">
+            <p className="text-base text-black/70 text-justify md:text-left">
               As a full stack developer, I design functional, user-friendly interfaces while also shaping the data and APIs that
               keep them running. I focus on simplifying complex tasks with clear, effective design to deliver seamless experiences.
             </p>
@@ -255,7 +255,7 @@ export default function Home() {
                             href="#demo"
                             className="icon-pill flex h-9 w-9 items-center justify-center rounded-full border border-black/20 text-md"
                           >
-                            ↗
+                            <IoArrowForward className="text-lg" />
                           </a>
                           <a
                             href="https://github.com/Dhanuka001"
