@@ -4,6 +4,7 @@ import Image from "next/image";
 import { CSSProperties, useEffect, useState } from "react";
 import { IoHeartOutline, IoHeartSharp, IoLogoGithub } from "react-icons/io5";
 import { MorphingTextDemo } from "@/components/animate-ui/primitives/texts/morphing";
+import { fetchLikeCount, incrementLike } from "@/lib/firebaseClient";
 
 const projects = [
   {
@@ -42,7 +43,7 @@ const techIcons = [
   { src: "/icons/icons8-db-100.png", label: "MongoDB" },
 ];
 
-const storageKey = "portfolio-like-count";
+const likedFlagKey = "portfolio-like-liked";
 const delayStyle = (value: string): CSSProperties => ({ "--delay": value } as CSSProperties);
 
 export default function Home() {
@@ -51,10 +52,28 @@ export default function Home() {
   const [likeCount, setLikeCount] = useState(21);
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowIntro(false), 2600);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    function updateProgress() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) {
+        setScrollProgress(100);
+        return;
+      }
+      const progress = Math.min(100, Math.max(0, (scrollTop / docHeight) * 100));
+      setScrollProgress(progress);
+    }
+
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+    return () => window.removeEventListener("scroll", updateProgress);
   }, []);
 
   useEffect(() => {
@@ -71,46 +90,38 @@ export default function Home() {
       return;
     }
 
-    const frame = requestAnimationFrame(() => {
-      const stored = localStorage.getItem(storageKey);
-      if (!stored || stored === "142") {
-        localStorage.setItem(storageKey, "21");
+    const frame = requestAnimationFrame(async () => {
+      try {
+        const count = await fetchLikeCount(21);
+        setLikeCount(count);
+      } catch {
         setLikeCount(21);
-      } else {
-        setLikeCount(Number(stored));
       }
-      const likedFlag = localStorage.getItem(`${storageKey}-liked`);
-      if (likedFlag === "true") {
+      const storedFlag = localStorage.getItem(likedFlagKey);
+      if (storedFlag === "true") {
         setHasLiked(true);
-      } else {
-        localStorage.setItem(`${storageKey}-liked`, "false");
       }
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (hasLiked) {
       return;
     }
 
     setLikeAnimating(true);
-    setLikeCount((prev) => {
-      const next = prev + 1;
-      if (typeof window !== "undefined") {
-        localStorage.setItem(storageKey, next.toString());
-      }
-      return next;
-    });
+    const newCount = await incrementLike();
+    setLikeCount(newCount || (likeCount + 1));
     setHasLiked(true);
     if (typeof window !== "undefined") {
-      localStorage.setItem(`${storageKey}-liked`, "true");
+      localStorage.setItem(likedFlagKey, "true");
     }
     setTimeout(() => setLikeAnimating(false), 300);
   };
 
   return (
-    <main className="min-h-screen bg-white text-black">
+    <main className="relative min-h-screen bg-white text-black">
       {showIntro && (
         <div className="loading-overlay">
           <MorphingTextDemo loop holdDelay={1500} className="loading-text text-[clamp(96px,12vw,220px)] font-black" />
@@ -347,6 +358,9 @@ export default function Home() {
         >
           © {new Date().getFullYear()} Dhanuka R — handcrafted web experiences, built with clarity and discipline.
         </footer>
+      </div>
+      <div className="scroll-progress-wrapper" aria-hidden="true">
+        <div className="scroll-progress-bar" style={{ width: `${scrollProgress}%` }} />
       </div>
     </main>
   );
