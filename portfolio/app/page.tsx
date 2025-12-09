@@ -40,7 +40,7 @@ const projects: Project[] = [
   {
     title: "PhoneBazzar eCommerce Store",
     duration: "2 months",
-    frontImage: "/phonebazzar.png",
+    frontImage: "/phonebazzar-2.png",
     backDescription:
       "PhoneBazzar is a full-stack eCommerce platform for mobile phones and gadgets with secure checkout, inventory tracking, order management, and a powerful admin panel. Includes user suspension tools, revenue dashboards, product analytics, and complete store automation from end to end.",
     demoLink: "https://cornelectronics.com",
