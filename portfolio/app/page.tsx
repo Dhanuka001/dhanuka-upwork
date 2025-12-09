@@ -1,12 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { CSSProperties, useEffect, useState } from "react";
-import { IoArrowForward, IoHeartOutline, IoHeartSharp, IoLogoGithub } from "react-icons/io5";
+import { CSSProperties, ChangeEvent, useEffect, useState } from "react";
+import { IoHeartOutline, IoHeartSharp, IoLogoGithub } from "react-icons/io5";
+import { FaArrowPointer } from "react-icons/fa6";
 import { MorphingTextDemo } from "@/components/animate-ui/primitives/texts/morphing";
 import { fetchLikeCount, incrementLike } from "@/lib/firebaseClient";
 
-const projects = [
+type Project = {
+  title: string;
+  duration: string;
+  frontImage: string;
+  backDescription?: string;
+  summary?: string;
+  demoLink: string;
+  githubLink: string;
+  badge?: string;
+};
+
+const projects: Project[] = [
   {
     title: "GodakPin.lk",
     duration: "2 weeks",
@@ -17,26 +29,25 @@ const projects = [
     githubLink: "https://github.com/Dhanuka001/godak-pin.git",
   },
   {
-    title: "Aurora Docs",
-    duration: "6 weeks",
-    summary:
-      "A modern documentation engine with live examples, searchable content, and a responsive UI toolkit built for product launches.",
-    tech: ["Next.js", "Tailwind CSS", "MDX"],
+    title: "SpaceX Launch Explorer",
+    duration: "< 1 week",
+    frontImage: "/spacex.png",
+    backDescription:
+      "A fast and responsive SpaceX launch explorer built in under one week using pure React and the SpaceX public API. Features include mission search, filters, favorites, client-side caching, request aborting, and reusable custom hooks optimized for performance.",
+    demoLink: "https://space-x-launches-dhanuka.vercel.app/",
+    githubLink: "https://github.com/Dhanuka001/SpaceX-Launches-Dhanuka.git",
   },
   {
-    title: "Pulse Metrics",
-    duration: "8 weeks",
-    summary:
-      "Data visualisation hub that combines telemetry feeds, anomaly alerts, and shareable reports for enterprise teams.",
-    tech: ["React 19", "Supabase", "Zustand"],
+    title: "PhoneBazzar eCommerce Store",
+    duration: "2 months",
+    frontImage: "/phonebazzar.png",
+    backDescription:
+      "PhoneBazzar is a full-stack eCommerce platform for mobile phones and gadgets with secure checkout, inventory tracking, order management, and a powerful admin panel. Includes user suspension tools, revenue dashboards, product analytics, and complete store automation from end to end.",
+    demoLink: "https://cornelectronics.com",
+    githubLink: "https://github.com/Dhanuka001/corn-ecommerce.git",
+    badge: "ongoing client project",
   },
-  {
-    title: "Lumen Studio",
-    duration: "5 weeks",
-    summary:
-      "Content editing workspace that lets marketing designers assemble hero layouts, schedule launches, and preview multi-device mocks.",
-    tech: ["TypeScript", "Node.js", "Vercel"],
-  },
+
 ];
 
 const techIcons = [
@@ -51,6 +62,105 @@ const techIcons = [
   { src: "/icons/icons8-sql-100.png", label: "SQL" },
   { src: "/icons/icons8-db-100.png", label: "MongoDB" },
 ];
+
+const ProjectShowcase = ({ items }: { items: Project[] }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeProject = items[activeIndex];
+  const description =
+    activeProject.backDescription ??
+    activeProject.summary ??
+    "Designed UI kits, orchestrated integrations, and shipped polished demos for product stakeholders.";
+
+  const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setActiveIndex(Number(event.target.value));
+  };
+
+  return (
+    <div className="mt-20 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="hidden flex-col gap-4 lg:flex">
+        {items.map((project, index) => (
+          <button
+            key={project.title}
+            type="button"
+            onClick={() => setActiveIndex(index)}
+            className={`relative flex flex-col items-end justify-end border px-4 pb-4 text-left transition-all aspect-[4/3] overflow-hidden ${
+              index === activeIndex
+                ? "border-slate-900 shadow-[0_20px_40px_rgba(15,23,42,0.12)]"
+                : "border-slate-200 hover:border-slate-900/40"
+            }`}
+            style={{
+              backgroundImage: `url("${project.frontImage ?? "/file.svg"}")`,
+              backgroundSize: "100% 100%",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }}
+          >
+            <span className="relative z-10 rounded-sm bg-white/90 px-2 py-1 text-sm font-semibold text-slate-900 shadow-[0_0_0_1px_rgba(15,23,42,0.1)]">
+              {project.title}
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-col gap-4 lg:hidden">
+        <label className="text-sm font-semibold text-slate-500">Select project</label>
+        <select
+          value={activeIndex}
+          onChange={handleSelectChange}
+          className="rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+        >
+          {items.map((project, index) => (
+            <option key={project.title} value={index}>
+              {project.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      <article className="flex flex-col overflow-hidden border border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
+        <div className="relative w-full" style={{ paddingTop: "75%" }}>
+          <Image
+            src={activeProject.frontImage ?? "/file.svg"}
+            alt={`${activeProject.title} preview`}
+            fill
+            className="absolute inset-0 object-contain"
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          />
+        </div>
+        <div className="flex flex-col gap-6 px-4 py-6 lg:px-6 lg:py-7">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h3 className="text-3xl font-bold text-slate-900 lg:text-4xl">{activeProject.title}</h3>
+              {activeProject.badge && (
+                <p className="mt-1 text-xs font-semibold text-slate-500">{activeProject.badge}</p>
+              )}
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                Duration: {activeProject.duration ?? "6 weeks"}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <a
+                href={activeProject.demoLink ?? "#demo"}
+                className="flex w-32 items-center justify-center gap-2 border border-slate-900 bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white hover:text-black hover:border-slate-900"
+              >
+                <FaArrowPointer className="text-base" />
+                demo
+              </a>
+              <a
+                href={activeProject.githubLink ?? "https://github.com/Dhanuka001"}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-32 items-center justify-center gap-2 border border-slate-900 bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white hover:text-black hover:border-slate-900"
+              >
+                <IoLogoGithub className="text-base" />
+                github
+              </a>
+            </div>
+          </div>
+          <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
+        </div>
+      </article>
+    </div>
+  );
+};
 
 const likedFlagKey = "portfolio-like-liked";
 const delayStyle = (value: string): CSSProperties => ({ "--delay": value } as CSSProperties);
@@ -240,104 +350,7 @@ export default function Home() {
               <h2 className="text-3xl font-semibold">What I shipped recently</h2>
             </div>
           </div>
-          <div className="mt-20 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {projects.map((project) => {
-              const detailText =
-                project.backDescription ??
-                project.summary ??
-                "Designed UI kits, orchestrated integrations, and shipped polished demos for product stakeholders.";
-              const demoLink = project.demoLink ?? "#demo";
-              const githubLink = project.githubLink ?? "https://github.com/Dhanuka001";
-              const hasImage = Boolean(project.frontImage);
-
-              return (
-                <div
-                  key={project.title}
-                  className="flip-card relative mx-auto w-full max-w-[500px] group aspect-[4/3] project-card bg-black/5 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.06)]"
-                >
-                  <div className="flip-card-inner  relative h-full w-full">
-                    <div className="flip-card-face flip-card-front">
-                      {hasImage ? (
-                        <div className="relative h-full w-full overflow-hidden bg-black">
-                          <Image
-                            src={project.frontImage as string}
-                            alt={`${project.title} preview`}
-                            fill
-                            className="object-contain"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex h-full flex-col justify-between  bg-white p-5 shadow-[0_25px_80px_rgba(0,0,0,0.08)]">
-                        <div className="space-y-3">
-                          <h3 className="text-2xl font-semibold text-black">{project.title}</h3>
-                          <p className="text-sm text-black/60">{project.summary}</p>
-                        </div>
-                          <p className="text-[0.65rem] font-semibold text-black/40">
-                            {project.tech?.join(" • ")}
-                          </p>
-                          <div className="front-mobile-actions md:hidden">
-                            <a
-                              href={demoLink}
-                              className="icon-pill flex h-9 w-9 items-center justify-center rounded-full border border-black/20 text-md"
-                            >
-                              <IoArrowForward className="text-lg" />
-                            </a>
-                            <a
-                              href={githubLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="icon-pill flex h-9 w-9 items-center justify-center rounded-full border border-black/20"
-                            >
-                              <IoLogoGithub className="text-lg" />
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flip-card-face flip-card-back">
-                      <div className="flex h-full flex-col justify-between bg-black p-5 text-white shadow-[0_25px_80px_rgba(0,0,0,0.3)]">
-                        <div>
-                          <p className="text-xs font-medium text-white/70">Details</p>
-                          <h3 className="mt-2 text-2xl font-semibold">{project.title}</h3>
-                          <p className="mt-3 text-sm text-white/70">{detailText}</p>
-                        </div>
-                        <div className="flex flex-col gap-2 text-sm">
-                          <div className="flex items-center justify-between text-white/70">
-                            <span>Duration</span>
-                            <span>{project.duration ?? "6 weeks"}</span>
-                          </div>
-                          <div className="flex justify-between gap-3">
-                            <a
-                              href={demoLink}
-                              className="mt-2 inline-flex w-full items-center justify-center border border-white/60 px-4 py-2 text-sm font-semibold transition hover:border-white hover:bg-white hover:text-black"
-                            >
-                              View demo
-                            </a>
-                            <a
-                              href={githubLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="mt-2 inline-flex h-10 w-14 items-center justify-center rounded-full border border-white/60 transition hover:border-white hover:bg-white hover:text-black"
-                            >
-                              <IoLogoGithub />
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <a
-                    href={demoLink}
-                    className="project-card-cta"
-                    aria-label={`View demo for ${project.title}`}
-                  >
-                    View demo <span aria-hidden="true">↗</span>
-                  </a>
-                </div>
-              );
-            })}
-          </div>
+          <ProjectShowcase items={projects} />
         </section>
 
         <section
