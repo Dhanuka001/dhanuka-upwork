@@ -297,7 +297,8 @@ export default function Home() {
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <a
-                href="#resume"
+                href="/Dhanuka%20V5.pdf"
+                download="Dhanuka_R_Resume.pdf"
                 className="inline-flex items-center gap-3 rounded-lg border border-black/70 bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900 hover:border-neutral-900 hover:shadow-[0_0_15px_rgba(0,0,0,0.4)]"
               >
                 <span className="relative h-5 w-5">
